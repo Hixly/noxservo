@@ -1,39 +1,33 @@
 /**
- * /api/answer
- * Fetches search results from Tavily, then generates a grounded answer via Claude Haiku.
- * Env vars: ANTHROPIC_API_KEY, TAVILY_API_KEY
+ * /api/answer  (POST)
+ * Generates a grounded answer via Claude Haiku using results the client
+ * already fetched from /api/search. Does NOT fetch its own results.
+ * Body: { q: string, results: [{ title, url, snippet }] }
+ * Env var: ANTHROPIC_API_KEY
  */
 
 import Anthropic from '@anthropic-ai/sdk'
 
 export default async function handler(req, res) {
-  const query = req.query?.q || ''
-
-  if (!query.trim()) {
-    return res.status(400).json({ error: 'Missing query parameter: q' })
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  if (!process.env.ANTHROPIC_API_KEY || !process.env.TAVILY_API_KEY) {
-    return res.status(500).json({ error: 'API keys not configured' })
+  const query = (req.body?.q || '').trim()
+  const results = Array.isArray(req.body?.results) ? req.body.results : []
+
+  if (!query) {
+    return res.status(400).json({ error: 'Missing query: q' })
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: 'API key not configured' })
   }
 
   try {
-    // Fetch search results to ground the answer
-    const tavilyRes = await fetch('https://api.tavily.com/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        api_key: process.env.TAVILY_API_KEY,
-        query,
-        search_depth: 'basic',
-        max_results: 3,
-        include_answer: false,
-      }),
-    })
-
-    const tavilyData = tavilyRes.ok ? await tavilyRes.json() : { results: [] }
-    const snippets = (tavilyData.results || [])
-      .map((r, i) => `[${i + 1}] ${r.title}: ${r.content?.substring(0, 300) || ''}`)
+    const snippets = results
+      .slice(0, 3)
+      .map((r, i) => `[${i + 1}] ${r.title}: ${(r.snippet || '').substring(0, 300)}`)
       .join('\n\n')
 
     const context = snippets
@@ -59,7 +53,6 @@ Query: ${query}`,
     const inputTokens = message.usage?.input_tokens || 0
     const outputTokens = message.usage?.output_tokens || 0
 
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
     return res.status(200).json(
       text ? { text, source: null, tokens: { input: inputTokens, output: outputTokens } } : null
     )
