@@ -28,7 +28,6 @@ export default function Results() {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(true)
   const [aiLoading, setAiLoading] = useState(false)
-  const [aiRequested, setAiRequested] = useState(false)
   const [usedAI, setUsedAI] = useState(false)
   const [energyWh, setEnergyWh] = useState(null)
   const [loadingMsg, setLoadingMsg] = useState('')
@@ -78,7 +77,6 @@ export default function Results() {
     setResults([])
     setEnergyWh(null)
     setUsedAI(false)
-    setAiRequested(false)
 
     const intent = classifyIntent(query)
 
@@ -116,7 +114,6 @@ export default function Results() {
   }, [query])
 
   const handleAskAI = () => {
-    setAiRequested(true)
     runAnswer(query, results)
   }
 
