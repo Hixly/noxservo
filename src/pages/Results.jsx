@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import SearchBar from '../components/SearchBar.jsx'
 import TopAnswer from '../components/TopAnswer.jsx'
 import SourceResults from '../components/SourceResults.jsx'
+import { classifyIntent } from '../lib/intent.js'
 
 const LOADING_MSGS = [
   'querying the void...',
@@ -17,6 +18,8 @@ const LOADING_MSGS = [
   'translating human curiosity...',
 ]
 
+const BASE_WH = 0.05
+
 export default function Results() {
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
@@ -24,7 +27,9 @@ export default function Results() {
   const [answer, setAnswer] = useState(null)
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(true)
-  const [expanded, setExpanded] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiRequested, setAiRequested] = useState(false)
+  const [usedAI, setUsedAI] = useState(false)
   const [energyWh, setEnergyWh] = useState(null)
   const [loadingMsg, setLoadingMsg] = useState('')
   const msgInterval = useRef(null)
@@ -36,50 +41,73 @@ export default function Results() {
     return () => { document.title = 'Noxservo' }
   }, [query])
 
+  // Run the AI answer path for the current query + already-fetched results.
+  const runAnswer = async (q, currentResults) => {
+    setAiLoading(true)
+    try {
+      const resp = await fetch('/api/answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q, results: currentResults.slice(0, 3) }),
+      })
+      const answerData = await resp.json()
+      setAnswer(answerData)
+      setUsedAI(true)
+      const tokens = answerData?.tokens
+      const wh = tokens
+        ? BASE_WH + ((tokens.input + tokens.output) * 0.002) / 1000
+        : BASE_WH
+      const whRounded = parseFloat(wh.toFixed(3))
+      setEnergyWh(whRounded)
+      fetch('/api/stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wh: whRounded }),
+      }).catch(() => {})
+    } catch {
+      setAnswer(null)
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (!query) return
     setLoading(true)
-    setExpanded(false)
     setAnswer(null)
     setResults([])
     setEnergyWh(null)
+    setUsedAI(false)
+    setAiRequested(false)
 
-    // Cycle through loading messages
+    const intent = classifyIntent(query)
+
     const pick = () => LOADING_MSGS[Math.floor(Math.random() * LOADING_MSGS.length)]
     setLoadingMsg(pick())
     msgInterval.current = setInterval(() => setLoadingMsg(pick()), 1800)
 
-
-    // Fetch answer and search results in parallel
-    Promise.all([
-      fetch(`/api/answer?q=${encodeURIComponent(query)}`).then((r) => r.json()),
-      fetch(`/api/search?q=${encodeURIComponent(query)}`).then((r) => r.json()),
-    ])
-      .then(([answerData, searchData]) => {
-        setAnswer(answerData)
+    fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      .then((r) => r.json())
+      .then(async (searchData) => {
         const resultList = searchData.results || []
         setResults(resultList)
-        // No AI answer available — auto-expand sources so the page isn't empty
-        if (!answerData) setExpanded(true)
 
-        // Calculate real energy: ~0.15 Wh for search + Claude tokens
-        const tokens = answerData?.tokens
-        const wh = tokens
-          ? 0.15 + ((tokens.input + tokens.output) * 0.002) / 1000
-          : 0.15
-        const whRounded = parseFloat(wh.toFixed(3))
-        setEnergyWh(whRounded)
-
-        // Report to community stats (fire-and-forget)
-        fetch('/api/stats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ wh: whRounded }),
-        }).catch(() => {})
+        if (intent === 'question') {
+          await runAnswer(query, resultList)
+        } else {
+          // Direct: no AI. Report the low baseline energy.
+          const whRounded = parseFloat(BASE_WH.toFixed(3))
+          setEnergyWh(whRounded)
+          fetch('/api/stats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wh: whRounded }),
+          }).catch(() => {})
+        }
       })
       .catch(() => {
-        setAnswer(null)
         setResults([])
+        setAnswer(null)
       })
       .finally(() => {
         clearInterval(msgInterval.current)
@@ -87,17 +115,18 @@ export default function Results() {
       })
   }, [query])
 
+  const handleAskAI = () => {
+    setAiRequested(true)
+    runAnswer(query, results)
+  }
+
   return (
     <div className="min-h-screen bg-black">
 
       {/* Top bar */}
       <header className="border-b border-[#111] px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center gap-5">
-          <Link
-            to="/"
-            className="pixel-logo shrink-0"
-            style={{ fontSize: '0.6rem' }}
-          >
+          <Link to="/" className="pixel-logo shrink-0" style={{ fontSize: '0.6rem' }}>
             NOXSERVO
           </Link>
           <div className="flex-1 max-w-lg">
@@ -114,43 +143,40 @@ export default function Results() {
             <p className="text-[#3a3a3a] text-xs tracking-widest font-mono transition-all duration-500">
               {loadingMsg}
             </p>
-            <div className="h-24 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg animate-pulse" />
+            <div className="h-24 bg-black border border-[#1a1a1a] rounded-lg animate-pulse" />
           </div>
         ) : (
           <>
-            <TopAnswer answer={answer} query={query} />
+            {/* AI answer (question intent or manual override) */}
+            {answer && <TopAnswer answer={answer} query={query} />}
 
-            {/* Show more toggle */}
+            {/* Manual override pill — only when no AI answer is shown yet */}
+            {!answer && !aiLoading && results.length > 0 && (
+              <button
+                onClick={handleAskAI}
+                className="text-[#3d3d3d] text-xs tracking-widest uppercase hover:text-[#c8c8c8] transition-colors duration-200 mb-6"
+              >
+                Ask Noxservo AI ↵
+              </button>
+            )}
+
+            {aiLoading && !answer && (
+              <p className="text-[#3a3a3a] text-xs tracking-widest font-mono mb-6">
+                consulting the oracle...
+              </p>
+            )}
+
+            {/* Blue-links — always expanded */}
             {results.length > 0 && (
-              <div className="mt-8">
-                <button
-                  onClick={() => setExpanded((v) => !v)}
-                  className="flex items-center gap-2 text-[#3d3d3d] text-xs tracking-widest uppercase hover:text-[#D4A853] transition-colors duration-200"
-                >
-                  <span>{expanded ? 'Hide sources' : 'Show sources'}</span>
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={`transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
-                  >
-                    <polyline points="1,3 5,7 9,3" />
-                  </svg>
-                </button>
-
-                {expanded && <SourceResults results={results} />}
+              <div className={answer ? 'mt-8' : ''}>
+                <SourceResults results={results} />
               </div>
             )}
 
             {/* Energy note */}
             {energyWh !== null && (
               <p className="text-[#272727] text-xs tracking-widest mt-12">
-                this search used ~{energyWh} Wh
+                this search used ~{energyWh} Wh{usedAI ? '' : ' · no AI'}
               </p>
             )}
           </>
