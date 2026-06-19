@@ -17,6 +17,27 @@ const mainPixels = [
   [4, 28], [24, 28],
 ]
 
+function getMarkBounds() {
+  const rects = mainPixels.flatMap(([x, y]) => [
+    [x, y, x + 4, y + 4],
+    [x + 4, y + 4, x + 8, y + 8],
+  ])
+
+  const minX = Math.min(...rects.map(([x1]) => x1))
+  const minY = Math.min(...rects.map(([, y1]) => y1))
+  const maxX = Math.max(...rects.map(([, , x2]) => x2))
+  const maxY = Math.max(...rects.map(([, , , y2]) => y2))
+
+  return {
+    minX,
+    minY,
+    maxX,
+    maxY,
+    cx: (minX + maxX) / 2,
+    cy: (minY + maxY) / 2,
+  }
+}
+
 function pixelMark() {
   const shadowRects = mainPixels
     .map(([x, y]) => `<rect x="${x + 4}" y="${y + 4}" width="4" height="4" fill="#444444"/>`)
@@ -32,19 +53,35 @@ function pixelMark() {
   return `<g id="noxservo-n">\n    ${shadowRects}\n    ${mainRects}\n  </g>`
 }
 
+function centeredMark(viewSize = 32) {
+  const { cx, cy } = getMarkBounds()
+  const offsetX = viewSize / 2 - cx
+  const offsetY = viewSize / 2 - cy
+
+  return `<g transform="translate(${offsetX.toFixed(2)}, ${offsetY.toFixed(2)})">${pixelMark()}</g>`
+}
+
+function centeredIconMark(canvasSize, { paddingRatio = 0.18, viewSize = 32 } = {}) {
+  const padding = canvasSize * paddingRatio
+  const scale = (canvasSize - padding * 2) / viewSize
+  const offset = (canvasSize - viewSize * scale) / 2
+
+  return `<g transform="translate(${offset.toFixed(2)}, ${offset.toFixed(2)}) scale(${scale.toFixed(4)})">${centeredMark(viewSize)}</g>`
+}
+
 function wrapSvg(body, viewBox = '0 0 32 32') {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">${body}</svg>`
 }
 
-const mark = pixelMark()
+const mark = centeredMark()
 
 const faviconSvg = wrapSvg(`<rect width="32" height="32" fill="#000000"/>${mark}`)
 const appIconSvg = wrapSvg(
-  `<rect width="512" height="512" rx="112" fill="#000000"/><g transform="translate(144, 120) scale(9.5)">${mark}</g>`,
+  `<rect width="512" height="512" rx="112" fill="#000000"/>${centeredIconMark(512, { paddingRatio: 0.17 })}`,
   '0 0 512 512',
 )
 const maskableSvg = wrapSvg(
-  `<rect width="512" height="512" fill="#000000"/><g transform="translate(168, 152) scale(7.2)">${mark}</g>`,
+  `<rect width="512" height="512" fill="#000000"/>${centeredIconMark(512, { paddingRatio: 0.22 })}`,
   '0 0 512 512',
 )
 const markSvg = wrapSvg(mark)

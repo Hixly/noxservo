@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g id="noxservo-n">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g transform="translate(-2.00, -2.00)"><g id="noxservo-n">
     <rect x="8" y="4" width="4" height="4" fill="#444444"/>
     <rect x="28" y="4" width="4" height="4" fill="#444444"/>
     <rect x="8" y="8" width="4" height="4" fill="#444444"/>
@@ -43,4 +43,4 @@
     <rect x="24" y="24" width="4" height="4" fill="#d4d4d4"/>
     <rect x="4" y="28" width="4" height="4" fill="#bcbcbc"/>
     <rect x="24" y="28" width="4" height="4" fill="#bcbcbc"/>
-  </g></svg>
+  </g></g></svg>
