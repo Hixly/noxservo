@@ -7,6 +7,11 @@ export default function Landing() {
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-xl flex flex-col items-center animate-fade-in">
 
+        {/* App mark */}
+        <div className="app-mark mb-5" aria-hidden="true">
+          <img src="/apple-touch-icon.png" alt="" className="app-mark__icon" />
+        </div>
+
         {/* Wordmark */}
         <h1 className="pixel-logo text-2xl mb-1">
           NOXSERVO

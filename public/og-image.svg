@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#000000"/>
+
+  <!-- Subtle grid lines for 8-bit texture -->
+  <line x1="0" y1="315" x2="1200" y2="315" stroke="#0a0a0a" stroke-width="1"/>
+  <line x1="600" y1="0" x2="600" y2="630" stroke="#0a0a0a" stroke-width="1"/>
+
+  <!-- Pixel-art N — scaled up, centered left of text -->
+  <!-- 16px blocks, 6 cols x 8 rows, starts at x=180 y=195 -->
+  <rect x="180" y="195" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="260" y="195" width="16" height="16" fill="#c8c8c8"/>
+
+  <rect x="180" y="211" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="196" y="211" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="260" y="211" width="16" height="16" fill="#c8c8c8"/>
+
+  <rect x="180" y="227" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="196" y="227" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="260" y="227" width="16" height="16" fill="#c8c8c8"/>
+
+  <rect x="180" y="243" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="212" y="243" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="260" y="243" width="16" height="16" fill="#c8c8c8"/>
+
+  <rect x="180" y="259" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="228" y="259" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="260" y="259" width="16" height="16" fill="#c8c8c8"/>
+
+  <rect x="180" y="275" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="228" y="275" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="260" y="275" width="16" height="16" fill="#c8c8c8"/>
+
+  <rect x="180" y="291" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="244" y="291" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="260" y="291" width="16" height="16" fill="#c8c8c8"/>
+
+  <rect x="180" y="307" width="16" height="16" fill="#c8c8c8"/>
+  <rect x="260" y="307" width="16" height="16" fill="#c8c8c8"/>
+
+  <!-- NOXSERVO wordmark -->
+  <text
+    x="320" y="302"
+    font-family="'Courier New', Courier, monospace"
+    font-size="72"
+    font-weight="bold"
+    letter-spacing="12"
+    fill="#c8c8c8"
+  >NOXSERVO</text>
+
+  <!-- Divider -->
+  <rect x="320" y="328" width="680" height="1" fill="#1a1a1a"/>
+
+  <!-- Tagline -->
+  <text
+    x="320" y="368"
+    font-family="'Courier New', Courier, monospace"
+    font-size="22"
+    letter-spacing="6"
+    fill="#3d3d3d"
+  >search quietly.</text>
+
+  <!-- URL -->
+  <text
+    x="320" y="440"
+    font-family="'Courier New', Courier, monospace"
+    font-size="18"
+    letter-spacing="3"
+    fill="#222222"
+  >noxservo.com</text>
+
+  <!-- Scanline overlay effect -->
+  <rect width="1200" height="630" fill="url(#scanlines)" opacity="0.04"/>
+  <defs>
+    <pattern id="scanlines" x="0" y="0" width="1" height="4" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="1" height="2" fill="transparent"/>
+      <rect x="0" y="2" width="1" height="2" fill="#ffffff"/>
+    </pattern>
+  </defs>
+</svg>

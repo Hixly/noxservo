@@ -39,7 +39,7 @@ export default function SearchBar({ initialValue = '', compact = false }) {
           className={`
             absolute right-0 top-0 bottom-0
             flex items-center justify-center
-            text-[#3a3a3a] hover:text-[#D4A853]
+            text-[#3a3a3a] hover:text-[#c8c8c8]
             transition-colors duration-200
             ${compact ? 'px-3' : 'px-4'}
           `}

@@ -18,7 +18,7 @@ export default function SourceResults({ results }) {
               <span className="text-[#3d3d3d] text-xs tracking-wide">
                 {result.domain}
               </span>
-              <h3 className="text-[#c4c4c4] text-sm mt-0.5 group-hover:text-[#D4A853] transition-colors duration-200 leading-snug">
+              <h3 className="text-[#c4c4c4] text-sm mt-0.5 group-hover:text-[#c8c8c8] transition-colors duration-200 leading-snug">
                 {result.title}
               </h3>
               <p className="text-[#555] text-xs mt-1 leading-relaxed">
