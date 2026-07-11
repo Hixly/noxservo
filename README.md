@@ -4,6 +4,8 @@
 
 **Live:** [noxservo.com](https://noxservo.com)
 
+![Noxservo search](.github/screenshot.png)
+
 Most search engines blast pure white pixels at you all day. Noxservo doesn't. It's a clean, dark-by-default search experience that uses less screen energy on OLED devices and just feels nicer to look at.
 
 Inspired by Blackle, modernized for the way we actually search now.
